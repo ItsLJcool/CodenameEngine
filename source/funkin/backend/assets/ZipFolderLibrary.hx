@@ -1,11 +1,14 @@
 package funkin.backend.assets;
 
+import funkin.backend.system.Flags;
+
 import haxe.io.Path;
 import lime.graphics.Image;
 import lime.media.AudioBuffer;
 import lime.text.Font;
 import lime.utils.Bytes;
 import openfl.utils.AssetLibrary;
+import sys.io.File;
 
 #if MOD_SUPPORT
 import funkin.backend.utils.SysZip.SysZipEntry;
@@ -100,8 +103,13 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	}
 
 	private function getAssetPath() {
-		var hot_take = (Path.extension(_parsedAsset) == "mp4") ? '[ZIP]$basePath/$_parsedAsset' : '$basePath/$_parsedAsset'; // cuz of how stupid hxvlc is implemented. (and VideoCutscene ig)
-		return hot_take;
+		// Now we have supports for videos in ZIP!!
+		if (Path.extension(_parsedAsset) == Flags.VIDEO_EXT) {
+			var newPath = './.temp/zip_video-${_parsedAsset.split("/").pop()}';
+			File.saveBytes(newPath, unzip(assets[_parsedAsset]));
+			return newPath;
+		}
+		return '$basePath/$_parsedAsset';
 	}
 
 	// TODO: rewrite this to 1 function, like ModsFolderLibrary

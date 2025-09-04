@@ -31,7 +31,6 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		this.modName = (modName == null) ? libName : modName;
 
 		zip = SysZip.openFromFile(basePath);
-		zip.read();
 		for(entry in zip.entries) {
 			lowerCaseAssets[entry.fileName.toLowerCase()] = assets[entry.fileName.toLowerCase()] = assets[entry.fileName] = entry;
 			nameMap.set(entry.fileName.toLowerCase(), entry.fileName);

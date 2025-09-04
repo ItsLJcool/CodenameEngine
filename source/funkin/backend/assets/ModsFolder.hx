@@ -83,10 +83,11 @@ class ModsFolder {
 	 */
 	public static function loadModLib(path:String, force:Bool = false, ?modName:String) {
 		#if MOD_SUPPORT
-		if (FileSystem.exists('$path.zip'))
-			return loadLibraryFromZip('$path'.toLowerCase(), '$path.zip', force, modName);
-		else
-			return loadLibraryFromFolder('$path'.toLowerCase(), '$path', force, modName);
+		for (ext in Flags.ALLOWED_ZIP_EXTENSIONS) {
+			if (!FileSystem.exists('$path.$ext')) continue;
+			return loadLibraryFromZip('$path'.toLowerCase(), '$path.$ext', force, modName);
+		}
+		return loadLibraryFromFolder('$path'.toLowerCase(), '$path', force, modName);
 
 		#else
 		return null;
@@ -103,19 +104,13 @@ class ModsFolder {
 		
 		final modsList:Array<String> = FileSystem.readDirectory(modsPath);
 
-		if (modsList == null || modsList.length <= 0)
-			return mods;
+		if (modsList == null || modsList.length <= 0) return mods;
 
 		for (modFolder in modsList) {
-			if (FileSystem.isDirectory(modsPath + modFolder)) {
-				mods.push(modFolder);
-			} else {
+			if (FileSystem.isDirectory(modsPath + modFolder)) mods.push(modFolder);
+			else {
 				var ext = Path.extension(modFolder).toLowerCase();
-				switch(ext) {
-					case 'zip':
-						// is a zip mod!!
-						mods.push(Path.withoutExtension(modFolder));
-				}
+				if (Flags.ALLOWED_ZIP_EXTENSIONS.contains(ext)) mods.push(Path.withoutExtension(modFolder));
 			}
 		}
 		#end

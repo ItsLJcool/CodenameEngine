@@ -72,12 +72,8 @@ class MainState extends FlxState {
 
 			for (addon in FileSystem.readDirectory(path)) {
 				if (!FileSystem.isDirectory(path + addon)) {
-					switch(Path.extension(addon).toLowerCase()) {
-						case 'zip':
-							addon = Path.withoutExtension(addon);
-						default:
-							continue;
-					}
+					if (Flags.ALLOWED_ZIP_EXTENSIONS.contains(Path.extension(addon).toLowerCase())) addon = Path.withoutExtension(addon);
+					else continue;
 				}
 
 				var data:AddonInfo = {

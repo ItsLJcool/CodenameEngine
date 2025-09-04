@@ -19,7 +19,7 @@ class Flags {
 	@:bypass public static var addonFlags:Map<String, Dynamic> = [];
 
 	// -- Codename's ZipFolderLibrary Config --
-	public static var ALLOWED_ZIP_EXTENSIONS:Array<String> = ["zip"];
+	public static var ALLOWED_ZIP_EXTENSIONS:Array<String> = ["zip"]; // So we can have .cnemod extensions :troll:
 
 	// -- Codename's Mod Config --
 	public static var MOD_NAME:String = "";

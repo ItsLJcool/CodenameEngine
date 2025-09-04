@@ -15,7 +15,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	public var basePath:String;
 	public var modName:String;
 	public var libName:String;
-	public var useImageCache:Bool = false;
+	// public var useImageCache:Bool = false;
 	public var prefix = 'assets/';
 
 	public var zip:SysZip;
@@ -67,15 +67,13 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		return getAssetPath();
 	}
 
-
-
 	public inline function unzip(f:SysZipEntry)
 		return f == null ? null : zip.unzipEntry(f);
 
 	public function __parseAsset(asset:String):Bool {
 		if (!asset.startsWith(prefix)) return false;
 		_parsedAsset = asset.substr(prefix.length);
-		if(ModsFolder.useLibFile) {
+		if (ModsFolder.useLibFile) {
 			var file = new haxe.io.Path(_parsedAsset);
 			if(file.file.startsWith("LIB_")) {
 				var library = file.file.substr(4);
@@ -103,8 +101,8 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	}
 
 	private function getAssetPath() {
-		trace('[ZIP]$basePath/$_parsedAsset');
-		return '[ZIP]$basePath/$_parsedAsset';
+		// trace('$basePath/$_parsedAsset');
+		return '$basePath/$_parsedAsset';
 	}
 
 	// TODO: rewrite this to 1 function, like ModsFolderLibrary

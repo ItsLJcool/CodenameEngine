@@ -33,7 +33,7 @@ class SysZip extends Reader {
 		fileInput = File.read(path, true);
 		super(fileInput);
 
-		updateEntries();
+		updateEntries(); // automatic but if you feel like you don't want it to be automatic, you can remove this.
 	}
 
 	/**

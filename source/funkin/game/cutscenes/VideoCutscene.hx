@@ -101,7 +101,9 @@ class VideoCutscene extends Cutscene {
 		FlxTween.tween(loadingBackdrop, {alpha: 1}, 0.5, {ease: FlxEase.sineInOut});
 
 		Main.execAsync(function() {
-			if (video.load(localPath)) new FlxTimer().start(0.001, function(_) { mutex.acquire(); onReady(); mutex.release(); });
+			if (video.load(localPath)) new FlxTimer().start(0.001, function(_) {
+				mutex.acquire(); onReady(); mutex.release();
+			});
 			else { mutex.acquire(); close(); mutex.release(); }
 		});
 
@@ -173,6 +175,7 @@ class VideoCutscene extends Cutscene {
 	}
 
 	public inline function onReady() {
+		trace("VideoCutscene: Ready");
 		FlxTween.cancelTweensOf(loadingBackdrop);
 		FlxTween.tween(loadingBackdrop, {alpha: 0}, 0.7, {ease: FlxEase.sineInOut, onComplete: function(_) {
 			loadingBackdrop.destroy();

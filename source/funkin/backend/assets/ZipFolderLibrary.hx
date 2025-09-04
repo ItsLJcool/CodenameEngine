@@ -26,7 +26,8 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	public var lowerCaseAssets:Map<String, SysZipEntry> = [];
 	public var nameMap:Map<String, String> = [];
 
-	public function new(basePath:String, libName:String, ?modName:String) {
+	public function new(basePath:String, libName:String, ?modName:String, ?preloadVideos:Bool = true) {
+		CoolUtil.debugTimeStamp();
 		this.libName = libName;
 
 		this.basePath = basePath;
@@ -35,19 +36,46 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 
 		zip = SysZip.openFromFile(basePath);
 		for(entry in zip.entries) {
-			lowerCaseAssets[entry.fileName.toLowerCase()] = assets[entry.fileName.toLowerCase()] = assets[entry.fileName] = entry;
-			nameMap.set(entry.fileName.toLowerCase(), entry.fileName);
+			var name = entry.fileName.toLowerCase();
+			lowerCaseAssets[name] = assets[name] = assets[entry.fileName] = entry;
+			nameMap.set(name, entry.fileName);
 		}
 
 		super();
+		precacheVideos();
+		CoolUtil.debugTimeStamp("ZipFolderLibrary");
+	}
+
+	public function precacheVideos() {
+		videoCacheRemap = [];
+		for (entry in zip.entries) {
+			var name = entry.fileName.toLowerCase();
+			if (_videoExtensions.contains(Path.extension(name))) getPath(prefix+name);
+		}
+		var count = 0;
+        for (_ in videoCacheRemap.keys()) count++;
+		trace('Precached $count video${count == 1 ? "" : "s"}');
+	}
+
+	// Now we have supports for videos in ZIP!!
+	public var _videoExtensions:Array<String> = [Flags.VIDEO_EXT];
+	public var videoCacheRemap:Map<String, String> = [];
+	public function getVideoRemap(originalPath:String):String {
+		if (!_videoExtensions.contains(Path.extension(_parsedAsset))) return originalPath;
+		if (videoCacheRemap.exists(originalPath)) return videoCacheRemap.get(originalPath);
+
+		// We adding the length of the string to counteract folder in folder naming duplicates.
+		var newPath = './.temp/${assets[_parsedAsset].fileName.length}-zipvideo-${_parsedAsset.split("/").pop()}';
+		File.saveBytes(newPath, unzip(assets[_parsedAsset]));
+		videoCacheRemap.set(originalPath, newPath);
+		return newPath;
 	}
 
 	function toString():String {
-		return '(ZipFolderLibrary: $libName/$modName)';
+		return '(ZipFolderLibrary: $libName/$modName | ${zip.entries.length} entries | Detected Video Extensions: ${_videoExtensions.join(", ")})';
 	}
 
 	public var _parsedAsset:String;
-
 	public override function getAudioBuffer(id:String):AudioBuffer {
 		__parseAsset(id);
 		return AudioBuffer.fromBytes(unzip(assets[_parsedAsset]));
@@ -70,8 +98,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		return getAssetPath();
 	}
 
-	public inline function unzip(f:SysZipEntry)
-		return f == null ? null : zip.unzipEntry(f);
+	public inline function unzip(f:SysZipEntry) return (f == null) ? null : zip.unzipEntry(f);
 
 	public function __parseAsset(asset:String):Bool {
 		if (!asset.startsWith(prefix)) return false;
@@ -103,13 +130,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	}
 
 	private function getAssetPath() {
-		// Now we have supports for videos in ZIP!!
-		if (Path.extension(_parsedAsset) == Flags.VIDEO_EXT) {
-			var newPath = './.temp/video-${_parsedAsset.split("/").pop()}';
-			File.saveBytes(newPath, unzip(assets[_parsedAsset]));
-			return newPath;
-		}
-		return '$basePath/$_parsedAsset';
+		return getVideoRemap('$basePath/$_parsedAsset');
 	}
 
 	// TODO: rewrite this to 1 function, like ModsFolderLibrary

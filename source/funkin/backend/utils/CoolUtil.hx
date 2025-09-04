@@ -1437,8 +1437,8 @@ final class CoolUtil
 	}
 
 	private static var lastTimeStamp:Float = -1;
-	public static function debugTimeStamp() {
-		if (lastTimeStamp != -1) {
+	public static function debugTimeStamp(?customText:String = "Quick Debug") {
+		if (lastTimeStamp < 0) {
 			var endTimeStamp = haxe.Timer.stamp();
 			Logs.traceColored([
 				Logs.logText("[Haxe Time Stamp] ", YELLOW),

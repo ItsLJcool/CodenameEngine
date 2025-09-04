@@ -12,7 +12,7 @@ import haxe.io.Bytes;
  * Class that extends Reader allowing you to load ZIP entries without blowing your RAM up!!
  * ~~Half of the code is taken from haxe libraries btw~~ Reworked by ItsLJcool to actually work for zip files.
  */
-class SysZip extends Reader {
+class SysZip {
 	var fileInput:FileInput;
 	var filePath:String;
 
@@ -31,7 +31,6 @@ class SysZip extends Reader {
 	public function new(path:String) {
 		this.filePath = path;
 		fileInput = File.read(path, true);
-		super(fileInput);
 
 		updateEntries(); // automatic but if you feel like you don't want it to be automatic, you can remove this.
 	}

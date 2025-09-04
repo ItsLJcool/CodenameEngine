@@ -67,8 +67,10 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		return getAssetPath();
 	}
 
-	public inline function unzip(f:SysZipEntry)
+	public inline function unzip(f:SysZipEntry) {
+		trace("unzipping " + f.fileName);
 		return f == null ? null : zip.unzipEntry(f);
+	}
 
 	public function __parseAsset(asset:String):Bool {
 		if (!asset.startsWith(prefix)) return false;
@@ -86,6 +88,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		_parsedAsset = _parsedAsset.toLowerCase();
 		if(nameMap.exists(_parsedAsset))
 			_parsedAsset = nameMap.get(_parsedAsset);
+		if (_parsedAsset.endsWith(".mp4")) trace(_parsedAsset);
 		return true;
 	}
 
@@ -101,8 +104,9 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	}
 
 	private function getAssetPath() {
-		// trace('$basePath/$_parsedAsset');
-		return '$basePath/$_parsedAsset';
+		var hot_take = (Path.extension(_parsedAsset) == "mp4") ? '[ZIP]$basePath/$_parsedAsset' : '$basePath/$_parsedAsset'; // cuz of how stupid hxvlc is implemented. (and VideoCutscene ig)
+		trace(hot_take);
+		return hot_take;
 	}
 
 	// TODO: rewrite this to 1 function, like ModsFolderLibrary

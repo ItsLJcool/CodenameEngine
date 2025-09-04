@@ -105,7 +105,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	private function getAssetPath() {
 		// Now we have supports for videos in ZIP!!
 		if (Path.extension(_parsedAsset) == Flags.VIDEO_EXT) {
-			var newPath = './.temp/zip_video-${_parsedAsset.split("/").pop()}';
+			var newPath = './.temp/video-${_parsedAsset.split("/").pop()}';
 			File.saveBytes(newPath, unzip(assets[_parsedAsset]));
 			return newPath;
 		}

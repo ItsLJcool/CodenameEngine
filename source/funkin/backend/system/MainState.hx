@@ -57,11 +57,12 @@ class MainState extends FlxState {
 		var _highPriorityAddons:Array<AddonInfo> = [];
 		var _noPriorityAddons:Array<AddonInfo> = [];
 
+		var quick_modsPath = ModsFolder.modsPath + ModsFolder.currentModFolder;
 		var addonPaths = [
 			ModsFolder.addonsPath,
 			(
 				ModsFolder.currentModFolder != null ?
-					ModsFolder.modsPath + ModsFolder.currentModFolder + "/addons/" :
+					quick_modsPath + "/addons/" :
 					null
 			)
 		];
@@ -97,8 +98,13 @@ class MainState extends FlxState {
 		for (addon in _lowPriorityAddons)
 			loadLib(addon.path, ltrim(addon.name, "[LOW]"));
 
-		if (ModsFolder.currentModFolder != null)
-			loadLib(ModsFolder.modsPath + ModsFolder.currentModFolder, ModsFolder.currentModFolder);
+		var isZipMod = (Path.extension(ModsFolder.currentModFolder) == "cnemod" || Flags.ALLOWED_ZIP_EXTENSIONS.contains(Path.extension(ModsFolder.currentModFolder)));
+		if (ModsFolder.currentModFolder != null) {
+			if (FileSystem.isDirectory(quick_modsPath) && Path.extension(ModsFolder.currentModFolder) == "cnemod")
+				loadLib(quick_modsPath + "/mod", ModsFolder.currentModFolder);
+			else
+				loadLib(quick_modsPath, ModsFolder.currentModFolder);
+		}
 
 		for (addon in _noPriorityAddons)
 			loadLib(addon.path, addon.name);
@@ -137,7 +143,7 @@ class MainState extends FlxState {
 			for (e in Paths.assetsTree.libraries) if ((lib = cast AssetsLibraryList.getCleanLibrary(e)) is ModsFolderLibrary
 				&& lib.modName == ModsFolder.currentModFolder)
 			{
-				if (lib.exists(Paths.ini("config/modpack"), lime.utils.AssetType.TEXT)) break;
+				if (lib.exists(Paths.ini("config/modpack"), lime.utils.AssetType.TEXT) || isZipMod) break; // because it's a zip file, you can't edit a zip file without decompiling it
 
 				FlxG.switchState(new ModConfigWarning(lib, startState));
 				return;

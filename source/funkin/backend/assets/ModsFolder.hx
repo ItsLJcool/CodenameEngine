@@ -97,10 +97,8 @@ class ModsFolder {
 	public static function getModsList():Array<String> {
 		var mods:Array<String> = [];
 		#if MOD_SUPPORT
-		if (!FileSystem.exists(modsPath)) {
-			// Mods directory does not exist yet, create it
-			FileSystem.createDirectory(modsPath);
-		}
+		// Mods directory does not exist yet, create it
+		if (!FileSystem.exists(modsPath)) FileSystem.createDirectory(modsPath);
 		
 		final modsList:Array<String> = FileSystem.readDirectory(modsPath);
 
@@ -108,10 +106,7 @@ class ModsFolder {
 
 		for (modFolder in modsList) {
 			if (FileSystem.isDirectory(modsPath + modFolder)) mods.push(modFolder);
-			else {
-				var ext = Path.extension(modFolder).toLowerCase();
-				if (Flags.ALLOWED_ZIP_EXTENSIONS.contains(ext)) mods.push(Path.withoutExtension(modFolder));
-			}
+			else if (Flags.ALLOWED_ZIP_EXTENSIONS.contains(Path.extension(modFolder))) mods.push(Path.withoutExtension(modFolder));
 		}
 		#end
 		return mods;

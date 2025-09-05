@@ -20,7 +20,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	public var libName:String;
 	// public var useImageCache:Bool = false;
 	public var prefix = 'assets/';
-
+	
 	public var zip:SysZip;
 	public var assets:Map<String, SysZipEntry> = [];
 	public var lowerCaseAssets:Map<String, SysZipEntry> = [];
@@ -42,6 +42,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		}
 
 		super();
+		isCompressed = true;
 		precacheVideos();
 		CoolUtil.debugTimeStamp("ZipFolderLibrary");
 	}

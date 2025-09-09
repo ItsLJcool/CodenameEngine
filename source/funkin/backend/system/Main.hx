@@ -167,6 +167,7 @@ class Main extends Sprite
 		if (FileSystem.exists("mods/autoload.txt"))
 			modToLoad = File.getContent("mods/autoload.txt").trim();
 
+		trace('modToLoad: ${modToLoad}');
 		ModsFolder.switchMod(modToLoad.getDefault(Options.lastLoadedMod));
 		#end
 

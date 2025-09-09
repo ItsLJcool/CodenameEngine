@@ -58,12 +58,28 @@ class MainState extends FlxState {
 		var _noPriorityAddons:Array<AddonInfo> = [];
 
 		var quick_modsPath = ModsFolder.modsPath + ModsFolder.currentModFolder;
+
+		var isCneMod = false;
+		for (ext in Flags.ALLOWED_ZIP_EXTENSIONS) {
+			if (!FileSystem.exists(quick_modsPath+"/cnemod."+ext)) continue;
+			isCneMod = true;
+			break;
+		}
+
+		// handing if the loading mod, before it's properly loaded, is a compressed mod
+		// we just need to use `Paths.assetsTree.hasCompressedLibrary` to complete valid checks for actual loaded compressed mods
+		var isZipMod = false;
+		for (ext in Flags.ALLOWED_ZIP_EXTENSIONS) {
+			if (!FileSystem.exists(quick_modsPath+"."+ext)) continue;
+			isZipMod = true;
+			break;
+		}
+
+		// Now here is a conundrum, if it's a compressed mod you can't really uncompress it yet, since it's not loaded as a library, so we need to skip it.
 		var addonPaths = [
 			ModsFolder.addonsPath,
-			(
-				ModsFolder.currentModFolder != null ?
-					quick_modsPath + "/addons/" :
-					null
+			( (ModsFolder.currentModFolder != null && !isZipMod) ?
+				quick_modsPath + "/addons/" : null
 			)
 		];
 
@@ -97,10 +113,10 @@ class MainState extends FlxState {
 		#if MOD_SUPPORT
 		for (addon in _lowPriorityAddons)
 			loadLib(addon.path, ltrim(addon.name, "[LOW]"));
-
+		
 		if (ModsFolder.currentModFolder != null) {
-			if (FileSystem.isDirectory(quick_modsPath) && Path.extension(ModsFolder.currentModFolder) == "cnemod")
-				loadLib(quick_modsPath + "/mod", ModsFolder.currentModFolder);
+			if (isCneMod)
+				loadLib(quick_modsPath + "/cnemod", ModsFolder.currentModFolder);
 			else
 				loadLib(quick_modsPath, ModsFolder.currentModFolder);
 		}
@@ -137,12 +153,12 @@ class MainState extends FlxState {
 
 		var startState:Class<FlxState> = Flags.DISABLE_WARNING_SCREEN ? TitleState : funkin.menus.WarningState;
 
-		if (Options.devMode && Options.allowConfigWarning) {
+		if (Options.devMode && Options.allowConfigWarning && !Paths.assetsTree.hasCompressedLibrary) { // because it's a zip file, you can't edit a zip file without decompiling it
 			var lib:ModsFolderLibrary;
 			for (e in Paths.assetsTree.libraries) if ((lib = cast AssetsLibraryList.getCleanLibrary(e)) is ModsFolderLibrary
 				&& lib.modName == ModsFolder.currentModFolder)
 			{
-				if (lib.exists(Paths.ini("config/modpack"), lime.utils.AssetType.TEXT) || Paths.assetsTree.hasCompressedLibrary) break; // because it's a zip file, you can't edit a zip file without decompiling it
+				if (lib.exists(Paths.ini("config/modpack"), lime.utils.AssetType.TEXT)) break;
 
 				FlxG.switchState(new ModConfigWarning(lib, startState));
 				return;

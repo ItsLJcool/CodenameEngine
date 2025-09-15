@@ -9,6 +9,10 @@ import lime.utils.AssetLibrary;
 class AssetsLibraryList extends AssetLibrary {
 
 	public var libraries:Array<AssetLibrary> = [];
+	public var cleanLibraries(get, never):Array<AssetLibrary>;
+	function get_cleanLibraries():Array<AssetLibrary> {
+		return [for (l in libraries) getCleanLibrary(l)];
+	}
 	
 	// is true if any library in `libraries` contains some kind of compressed library. 
 	public var hasCompressedLibrary(get, never):Bool;

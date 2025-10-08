@@ -1060,14 +1060,22 @@ class PlayState extends MusicBeatState
 	}
 
 	public override function destroy() {
+		var notNull = stage != null;
+		if (notNull) PlayState.instance.gameAndCharsCall("onStageDestroy", [stage]);
 		scripts.call("destroy");
-		for(g in __cachedGraphics)
-			g.useCount--;
+
+		for (g in __cachedGraphics) g.useCount--;
 		@:privateAccess {
 			for (strumLine in strumLines.members) FlxG.sound.destroySound(strumLine.vocals);
 			if (FlxG.sound.music != inst) FlxG.sound.destroySound(inst);
 			FlxG.sound.destroySound(vocals);
 		}
+
+		if (notNull) {
+			stage.destroySilently();
+			remove(stage, true);
+		}
+
 		scripts = FlxDestroyUtil.destroy(scripts);
 
 		super.destroy();
@@ -1456,7 +1464,7 @@ class PlayState extends MusicBeatState
 	public function moveCamera() if (strumLines.members[curCameraTarget] != null) {
 		var data:CamPosData = getStrumlineCamPos(curCameraTarget);
 		if (data.amount > 0) {
-			var event = scripts.event("onCameraMove", EventManager.get(CamMoveEvent).recycle(data.pos, strumLines.members[curCameraTarget], data.amount));
+			var event = gameAndCharsEvent("onCameraMove", EventManager.get(CamMoveEvent).recycle(data.pos, strumLines.members[curCameraTarget], data.amount));
 			if (!event.cancelled)
 				camFollow.setPosition(event.position.x, event.position.y);
 		}

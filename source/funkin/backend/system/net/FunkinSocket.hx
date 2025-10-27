@@ -38,30 +38,37 @@ class FunkinSocket implements IFlxDestroyable {
 	public function readAll():Null<Bytes> {
 		try {
 			var bytes = this.socket.input.readAll();
-			if (bytes == null) return bytes;
+			if (bytes == null) return null;
 			metrics.updateBytesReceived(bytes.length);
 			return bytes;
-		} catch(e) {
-			Logs.traceColored([
-				Logs.logText('[FunkinSocket] ', BLUE),
-				Logs.logText('Failed to read from socket: ${e}', NONE),
-			]);
-		}
+		} catch(e) { }
+		return null;
+	}
+	public function readLine():Null<String> {
+		try {
+			var bytes = this.socket.input.readLine();
+			if (bytes == null) return null;
+			metrics.updateBytesReceived(bytes.length);
+			return bytes;
+		} catch(e) { }
 		return null;
 	}
 	public function read(nBytes:Int):Null<Bytes> {
 		try {
 			var bytes = this.socket.input.read(nBytes);
-			if (bytes == null) return bytes;
+			if (bytes == null) return null;
 			metrics.updateBytesReceived(bytes.length);
 			return bytes;
-		} catch(e) {
-			Logs.traceColored([
-				Logs.logText('[FunkinSocket] ', BLUE),
-				Logs.logText('Failed to read from socket: ${e}', NONE),
-			]);
-		}
+		} catch(e) { }
 		return null;
+	}
+	public function readBytes(bytes:Bytes):Int {
+		try {
+			var length = this.socket.input.readBytes(bytes, 0, bytes.length);
+			metrics.updateBytesReceived(length);
+			return length;
+		} catch(e) { }
+		return 0;
 	}
 
 	// Writing Area
@@ -71,12 +78,7 @@ class FunkinSocket implements IFlxDestroyable {
 			this.socket.output.write(bytes);
 			metrics.updateBytesSent(bytes.length);
 			return true;
-		} catch (e) {
-			Logs.traceColored([
-				Logs.logText('[FunkinSocket] ', BLUE),
-				Logs.logText('Failed to write to socket: ${e}', NONE),
-			]);
-		}
+		} catch (e) { }
 		return false;
 	}
 	public function writeString(str:String):Bool {
@@ -84,12 +86,7 @@ class FunkinSocket implements IFlxDestroyable {
 			this.socket.output.writeString(str);
 			metrics.updateBytesSent(Bytes.ofString(str).length);
 			return true;
-		} catch(e) {
-			Logs.traceColored([
-				Logs.logText('[FunkinSocket] ', BLUE),
-				Logs.logText('Failed to write to socket: ${e}', NONE),
-			]);
-		}
+		} catch(e) { }
 		return false;
 	}
 
@@ -117,7 +114,7 @@ class FunkinSocket implements IFlxDestroyable {
 			if (socket != null) socket.close();
 			Logs.traceColored([
 				Logs.logText('[FunkinSocket] ', BLUE),
-				Logs.logText('Closing socket from', NONE), Logs.logText(host.toString(), YELLOW), Logs.logText(':', NONE), Logs.logText(Std.string(port), CYAN),
+				Logs.logText('Closing socket from ', NONE), Logs.logText(host.toString(), YELLOW), Logs.logText(':', NONE), Logs.logText(Std.string(port), CYAN),
 			]);
 		} catch(e) {
 			Logs.traceColored([

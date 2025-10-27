@@ -226,7 +226,15 @@ class Options
 
 	public static function applySettings() {
 		applyKeybinds();
+		applyQuality();
 
+		FlxG.sound.defaultMusicGroup.volume = volumeMusic;
+		FlxG.autoPause = autoPause;
+		if (FlxG.updateFramerate < framerate) FlxG.drawFramerate = FlxG.updateFramerate = framerate;
+		else FlxG.updateFramerate = FlxG.drawFramerate = framerate;
+	}
+
+	public static function applyQuality() {
 		switch (quality) {
 			case 0:
 				antialiasing = false;
@@ -238,11 +246,7 @@ class Options
 				gameplayShaders = true;
 		}
 
-		FlxG.sound.defaultMusicGroup.volume = volumeMusic;
 		FlxG.game.stage.quality = (FlxG.enableAntialiasing = antialiasing) ? BEST : LOW;
-		FlxG.autoPause = autoPause;
-		if (FlxG.updateFramerate < framerate) FlxG.drawFramerate = FlxG.updateFramerate = framerate;
-		else FlxG.updateFramerate = FlxG.drawFramerate = framerate;
 	}
 
 	public static function applyKeybinds() {

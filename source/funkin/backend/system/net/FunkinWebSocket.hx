@@ -104,13 +104,17 @@ class HeaderWs {
 	inline public function remove(name:String):Bool { return fields.remove(name); }
 	inline public function keys():Iterator<String> { return fields.keys(); }
 
+	public function toString():String {
+		var str:String = '';
+		if (head.length > 0) str += '${head}\r\n';
+		for (key in keys()) str += '$key: ${get(key)}\r\n';
+		str += '\r\n';
+		if (content.length > 0) str += '${content}\r\n';
+		return str;
+	}
 	public function toBytes():Bytes {
 		var bytes:BytesOutput = new BytesOutput();
-		if (head.length > 0) bytes.writeString('$head\r\n');
-		for (key in keys()) bytes.writeString('$key: ${get(key)}\r\n');
-		bytes.writeString('\r\n');
-		if (content.length > 0) bytes.writeString('$content\r\n');
+		bytes.writeString(toString()); // Absolute Cinema, thanks AbstractAndrew for the Revolutionary Idea 🔥🔥
 		return bytes.getBytes();
 	}
-	public function toString():String { return toBytes().toString(); }
 }

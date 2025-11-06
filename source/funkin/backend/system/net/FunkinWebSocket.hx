@@ -7,6 +7,9 @@ import flixel.util.FlxSignal.FlxTypedSignal;
 import hx.ws.WebSocket;
 import hx.ws.Log as LogWs;
 
+/**
+* This is a wrapper for hxWebSockets
+**/
 class FunkinWebSocket implements IFlxDestroyable {
 	private static var LOG_INFO(default, set):Bool = false;
 	private static function set_LOG_INFO(value:Bool):Bool {
@@ -38,8 +41,12 @@ class FunkinWebSocket implements IFlxDestroyable {
 	public var onError:FlxTypedSignal<Dynamic->Void> = new FlxTypedSignal<Dynamic->Void>();
 
 	public var url:String;
+	public var handshakeHeaders(get, null):Map<String, String>;
+	public function get_handshakeHeaders():Map<String, String> { return this._ws.additionalHeaders; }
+
 	public function new(_url:String) {
 		this.url = _url;
+
 		this._ws = new WebSocket(this.url, false);
 		this._ws.onopen = () -> onOpen.dispatch();
 		this._ws.onmessage = (message) -> onMessage.dispatch(message);
@@ -84,8 +91,8 @@ class HeaderWs {
 	public var content:String;
 
 	public function new(_head:String, ?_content:String = "") {
-		this.head = _head;
-		this.content = _content;
+		this.head = _head.trim();
+		this.content = _content.trim();
 	}
 
 	public function set(name:String, value:String):HeaderWs {

@@ -1,11 +1,13 @@
 package funkin.backend.system.net;
 
+import flixel.util.typeLimit.OneOfThree;
+
 import haxe.io.Bytes;
-import haxe.io.BytesOutput;
 
 import flixel.util.FlxSignal.FlxTypedSignal;
-import hx.ws.WebSocket;
 import hx.ws.Log as LogWs;
+import hx.ws.WebSocket;
+import hx.ws.Types.MessageType;
 
 /**
 * This is a wrapper for hxWebSockets
@@ -36,7 +38,7 @@ class FunkinWebSocket implements IFlxDestroyable {
 	private var _ws:WebSocket;
 
 	public var onOpen:FlxTypedSignal<Void->Void> = new FlxTypedSignal<Void->Void>();
-	public var onMessage:FlxTypedSignal<Dynamic->Void> = new FlxTypedSignal<Dynamic->Void>();
+	public var onMessage:FlxTypedSignal<OneOfThree<String, Bytes, FunkinPacket>->Void> = new FlxTypedSignal<OneOfThree<String, Bytes, FunkinPacket>->Void>(); // cursed 😭😭
 	public var onClose:FlxTypedSignal<Void->Void> = new FlxTypedSignal<Void->Void>();
 	public var onError:FlxTypedSignal<Dynamic->Void> = new FlxTypedSignal<Dynamic->Void>();
 
@@ -44,12 +46,27 @@ class FunkinWebSocket implements IFlxDestroyable {
 	public var handshakeHeaders(get, null):Map<String, String>;
 	public function get_handshakeHeaders():Map<String, String> { return this._ws.additionalHeaders; }
 
+	public var AUTO_DECODE_PACKETS:Bool = true;
+
 	public function new(_url:String) {
 		this.url = _url;
 
 		this._ws = new WebSocket(this.url, false);
 		this._ws.onopen = () -> onOpen.dispatch();
-		this._ws.onmessage = (message) -> onMessage.dispatch(message);
+		this._ws.onmessage = (message:MessageType) -> {
+			var data:OneOfThree<String, Bytes, FunkinPacket> = "";
+			switch(message) {
+				case StrMessage(content):
+					data = content;
+				case BytesMessage(buffer):
+					data = buffer.readAllAvailableBytes();
+					if (!AUTO_DECODE_PACKETS) return onMessage.dispatch(data);
+					var packet:FunkinPacket = FunkinPacket.fromBytes(data);
+					if (packet == null) return onMessage.dispatch(data);
+					data = packet;
+			}
+			onMessage.dispatch(data);
+		};
 		this._ws.onclose = () -> onClose.dispatch();
 		this._ws.onerror = (error) -> onError.dispatch(error);
 	}
@@ -66,6 +83,7 @@ class FunkinWebSocket implements IFlxDestroyable {
 	public function send(data:Dynamic):Bool {
 		try {
 			this._ws.send(data);
+			return true;
 		} catch(e) {
 			Logs.traceColored([
 				Logs.logText('[FunkinWebSocket] ', CYAN),
@@ -83,38 +101,4 @@ class FunkinWebSocket implements IFlxDestroyable {
 		_ws.close();
 	}
 	public function destroy():Void { close(); }
-}
-
-class HeaderWs {
-	public var head:String;
-	public var fields:Map<String, String> = new Map<String, String>();
-	public var content:String;
-
-	public function new(_head:String, ?_content:String = "") {
-		this.head = _head.trim();
-		this.content = _content.trim();
-	}
-
-	public function set(name:String, value:String):HeaderWs {
-		fields.set(name, value);
-		return this;
-	}
-	inline public function get(name:String):String { return fields.get(name); }
-	inline public function exists(name:String):Bool { return fields.exists(name); }
-	inline public function remove(name:String):Bool { return fields.remove(name); }
-	inline public function keys():Iterator<String> { return fields.keys(); }
-
-	public function toString():String {
-		var str:String = '';
-		if (head.length > 0) str += '${head}\r\n';
-		for (key in keys()) str += '$key: ${get(key)}\r\n';
-		str += '\r\n';
-		if (content.length > 0) str += '${content}\r\n';
-		return str;
-	}
-	public function toBytes():Bytes {
-		var bytes:BytesOutput = new BytesOutput();
-		bytes.writeString(toString()); // Absolute Cinema, thanks AbstractAndrew for the Revolutionary Idea 🔥🔥
-		return bytes.getBytes();
-	}
 }

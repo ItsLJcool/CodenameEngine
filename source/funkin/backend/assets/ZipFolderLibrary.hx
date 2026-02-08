@@ -18,7 +18,6 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	public var basePath:String;
 	public var modName:String;
 	public var libName:String;
-	// public var useImageCache:Bool = false;
 	public var prefix = 'assets/';
 	
 	public var zip:SysZip;
@@ -27,7 +26,6 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	public var nameMap:Map<String, String> = [];
 
 	public function new(basePath:String, libName:String, ?modName:String, ?preloadVideos:Bool = true) {
-		CoolUtil.debugTimeStamp();
 		this.libName = libName;
 
 		this.basePath = basePath;
@@ -38,7 +36,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		for(entry in zip.entries) {
 			if (entry.fileName.length < 0 || entry.fileName.endsWith("/")) continue;
 
-      var name:String = entry.fileName.toLowerCase(); // calling .toLowerCase a million times is never the solution
+			var name:String = entry.fileName.toLowerCase(); // calling .toLowerCase a million times is never the solution
 			lowerCaseAssets[name] = assets[name] = assets[entry.fileName] = entry;
 			nameMap.set(name, entry.fileName);
 		}
@@ -46,7 +44,6 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		super();
 		isCompressed = true;
 		precacheVideos();
-		CoolUtil.debugTimeStamp("ZipFolderLibrary");
 	}
 
 	public function precacheVideos() {
@@ -57,7 +54,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		}
 		var count = 0;
         for (_ in videoCacheRemap.keys()) count++;
-		trace('Precached $count video${count == 1 ? "" : "s"}');
+		trace('Precached $count video${(count == 1) ? "" : "s"}');
 	}
 
 	// Now we have supports for videos in ZIP!!
@@ -188,12 +185,10 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 
 	// Backwards compat
 
+	// what the fuck does this do? beats me. -ItsLJcool
+
 	@:noCompletion public var zipPath(get, set):String;
-	@:noCompletion private inline function get_zipPath():String {
-		return basePath;
-	}
-	@:noCompletion private inline function set_zipPath(value:String):String {
-		return basePath = value;
-	}
+	@:noCompletion private inline function get_zipPath():String { return basePath; }
+	@:noCompletion private inline function set_zipPath(value:String):String { return basePath = value; }
 }
 #end

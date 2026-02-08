@@ -16,7 +16,7 @@ class SysZip {
 	var fileInput:FileInput;
 	var filePath:String;
 
-	public var entries:List<SysZipEntry>;
+	public var entries:List<SysZipEntry> = new List();
 
 	/**
 	 * Opens a zip from a specified path.
@@ -54,14 +54,24 @@ class SysZip {
 		return s;
 	}
 
+	/**
+	 * Updates the `entries` list with the current contents of the zip file.
+	 * This is done when the zip is read from SysZip the first time, but if you REALLY need to re-update the entries, you can call this again.
+	 * 
+	 * Note: Calling this function will hold up the game as it has to read the ENTIRE zip, so if it's large like 1GiB or more, it might take a second or more.
+	 */
 	public function updateEntries() {
-		entries = new List();
+		if (entries.length > 0) {
+			entries.clear();
+			entries = new List();
+		}
 		
 		// --- locate End of Central Directory (EOCD) ---
 		var fileSize:Int = sys.FileSystem.stat(this.filePath).size; // probably need a better way to check the size of the file.
 		var scanSize:Int = (65535 < fileSize) ? 65535 : fileSize;
 		
-		fileInput.seek(fileSize - scanSize, SeekBegin); // It seems this usually ends up being 0 anyways, but for cases where it might not be?? I'd just make sure. but Someone do some digging I don't know if this required.
+		// It seems this usually ends up being 0 anyways, but for cases where it might not be?? I'd just make sure. but Someone do some digging I don't know if this required.
+		fileInput.seek(fileSize - scanSize, SeekBegin);
 		
 		var buf = fileInput.read(scanSize);
 		var b = new haxe.io.BytesInput(buf);
@@ -73,10 +83,10 @@ class SysZip {
 			if (fileInput.readInt32() != 0x02014b50) break; // central dir file header signature
 
 			fileInput.seek(6, SeekCur); // version/flags
-			var compMethod = fileInput.readUInt16();
+			var compression_method = fileInput.readUInt16();
 			fileInput.seek(8, SeekCur); // time/date + CRC32 (4, 4)
-			var compSize = fileInput.readInt32();
-			var uncompSize = fileInput.readInt32();
+			var compressed_size = fileInput.readInt32();
+			var uncompressed_size = fileInput.readInt32();
 			var nameLen = fileInput.readUInt16();
 			var extraLen = fileInput.readUInt16();
 			var commentLen = fileInput.readUInt16();
@@ -97,15 +107,20 @@ class SysZip {
 
 			var zipEntry:SysZipEntry = {
 				fileName: name,
-				fileSize: uncompSize,
+				fileSize: uncompressed_size,
+				// I don't remember what the `+ 30` is for, but probably to offset something
 				seekPos: (localHeaderOffset + 30 + localNameLen + localExtraLen),
-				compressedSize: compSize,
-				compressed: (compMethod == 8),
+				compressedSize: compressed_size,
+				compressed: (compression_method == 8),
 			};
 			entries.add(zipEntry);
 		}
 	}
 
+	/**
+	 * calling `dispose` doesn't actually kill the class, you can still access the entries.
+	 * disposing of SysZip will free the compressed file from being used by the engine.
+	 */
 	public function dispose() {
 		if (fileInput != null) fileInput.close();
 	}

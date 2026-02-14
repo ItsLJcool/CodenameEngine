@@ -59,25 +59,26 @@ class MainState extends FlxState {
 
 		var quick_modsPath = ModsFolder.modsPath + ModsFolder.currentModFolder;
 
-		var isCneMod = false;
-		for (ext in Flags.ALLOWED_ZIP_EXTENSIONS) {
-			if (!FileSystem.exists(quick_modsPath+"/cnemod."+ext)) continue;
-			isCneMod = true;
-			break;
-		}
-
 		// handing if the loading mod, before it's properly loaded, is a compressed mod
 		// we just need to use `Paths.assetsTree.hasCompressedLibrary` to complete valid checks for actual loaded compressed mods
 		var isZipMod = false;
-		for (ext in Flags.ALLOWED_ZIP_EXTENSIONS) {
-			if (!FileSystem.exists(quick_modsPath+"."+ext)) continue;
-			isZipMod = true;
-			break;
-		}
+		
+		// If we know it's a compressed mod, then we can check if it's using the `cnemod` folder path.
+		// All it is really is a folder with the mod's name, then a compressed file called "cnemod.[zip|7z|rar|etc]"
+		var isCneMod = false;
 
-		// Now here is a conundrum, if it's a compressed mod you can't really uncompress it yet, since it's not loaded as a library, so we need to skip it.
+		// We are doing it like this because think about it: it's 1 for loop lol
+		for (ext in Flags.ALLOWED_ZIP_EXTENSIONS) {
+			if (FileSystem.exists(quick_modsPath+"."+ext)) isZipMod = true;
+			if (FileSystem.exists(quick_modsPath+"/cnemod."+ext)) isCneMod = true;
+			if (isZipMod && isCneMod) break;
+		}
+		
+		// We get the addons folder from relative space (`./`) and then our mod's addons.
 		var addonPaths = [
 			ModsFolder.addonsPath,
+			// So to check the mod's addons folder, we need to decompress it, which is impossible in this stage of the loading library process.
+			// TODO: Write a function when the library is loaded to decompress the contents and then load the libraries :)
 			( (ModsFolder.currentModFolder != null && !isZipMod) ?
 				quick_modsPath + "/addons/" : null
 			)

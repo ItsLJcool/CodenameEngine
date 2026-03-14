@@ -43,7 +43,7 @@ class SysZip {
 		fileInput.seek(f.seekPos, SeekBegin);
 		var data = fileInput.read(f.compressedSize);
 		
-		if (!f.compressed) return data;
+		if (!f.compressed || f.fileSize <= 0) return data;
 
 		var c = new haxe.zip.Uncompress(-15);
 		var s = Bytes.alloc(f.fileSize);

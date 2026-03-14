@@ -40,17 +40,19 @@ class SysZip {
 	 * @param f Entry to read from.
 	 */
 	public function unzipEntry(f:SysZipEntry):Bytes {
+		if (f.fileSize <= 0) return Bytes.alloc(0);
+		
 		fileInput.seek(f.seekPos, SeekBegin);
 		var data = fileInput.read(f.compressedSize);
 		
-		if (!f.compressed || f.fileSize <= 0) return data;
+		if (!f.compressed) return data;
 
 		var c = new haxe.zip.Uncompress(-15);
 		var s = Bytes.alloc(f.fileSize);
 		var r = c.execute(data, 0, s, 0);
 		c.close();
 
-		if (!r.done || r.read != data.length || r.write != f.fileSize) throw "Invalid compressed data for " + f.fileName;
+		if (!r.done || r.read != data.length || r.write != f.fileSize) throw 'Invalid compressed data for ${f.fileName} | ${f.compressedSize} -> ${f.fileSize}';
 		return s;
 	}
 
@@ -75,6 +77,7 @@ class SysZip {
 		
 		var buf = fileInput.read(scanSize);
 		var b = new haxe.io.BytesInput(buf);
+		// I LOVE USING MAGIC NUMBERS AND FORGETTING WHAT THEY DO 🔥🔥🔥🔥🔥🔥
 		b.position = (buf.length - 22) + 16; // offset to start of central directory
 
 		// --- read central directory ---
@@ -100,10 +103,15 @@ class SysZip {
 
 			// --- compute correct seekPos using local header ---
 			var curPos = fileInput.tell();
+			// I also forgor what the `+ 26` is for, so uh my b chat
 			fileInput.seek(localHeaderOffset + 26, SeekBegin);
 			var localNameLen = fileInput.readUInt16();
 			var localExtraLen = fileInput.readUInt16();
 			fileInput.seek(curPos, SeekBegin);
+
+			// I completely forgot that we don't really need to log the FOLDER of the content because we only care about where the contents are.
+			// the folders are labled as 0 bytes anyways so this will save on storing non-required data.
+			if (name.endsWith("/")) continue;
 
 			var zipEntry:SysZipEntry = {
 				fileName: name,

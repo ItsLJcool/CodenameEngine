@@ -25,6 +25,8 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 	public var lowerCaseAssets:Map<String, SysZipEntry> = [];
 	public var nameMap:Map<String, String> = [];
 
+	public var PRELOAD_VIDEOS:Bool = true;
+
 	public function new(basePath:String, libName:String, ?modName:String, ?preloadVideos:Bool = true) {
 		this.libName = libName;
 
@@ -42,17 +44,26 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		}
 
 		super();
+
 		isCompressed = true;
-		precacheVideos();
+		
+		// don't override default value of true if the file exists.
+		// by default `PRELOAD_VIDEOS` is true so you will never need to add this file, but in the case of it being false this is a backup method.
+		PRELOAD_VIDEOS = (!PRELOAD_VIDEOS) ? exists("assets/data/PRECACHE_VIDEOS", "TEXT") : PRELOAD_VIDEOS;
+
+		// if (PRELOAD_VIDEOS) precacheVideos(); // we do this in `MainState` now to handle for `Flags.VIDEO_EXT` :)
 	}
 
 	public function precacheVideos() {
+		_videoExtensions = [Flags.VIDEO_EXT];
+		
 		videoCacheRemap = [];
 		for (entry in zip.entries) {
 			var name = entry.fileName.toLowerCase();
 			if (_videoExtensions.contains(Path.extension(name))) getPath(prefix+name);
 		}
-		var count = 0;
+
+		var count:Int = 0;
         for (_ in videoCacheRemap.keys()) count++;
 		if (count <= 0) return;
 		trace('Precached $count video${(count == 1) ? "" : "s"}');
@@ -66,7 +77,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		if (videoCacheRemap.exists(originalPath)) return videoCacheRemap.get(originalPath);
 
 		// We adding the length of the string to counteract folder in folder naming duplicates.
-		var newPath = './.temp/${assets[_parsedAsset].fileName.length}-zipvideo-${_parsedAsset.split("/").pop()}';
+		var newPath = './.temp/${_parsedAsset.length}-zipvideo-${_parsedAsset.split("/").pop()}';
 		File.saveBytes(newPath, unzip(assets[_parsedAsset]));
 		videoCacheRemap.set(originalPath, newPath);
 		return newPath;
@@ -130,7 +141,7 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		return assets[_parsedAsset] != null;
 	}
 
-	private function getAssetPath() {
+	private inline function getAssetPath() {
 		return getVideoRemap('$basePath/$_parsedAsset');
 	}
 
@@ -180,16 +191,6 @@ class ZipFolderLibrary extends AssetLibrary implements IModsAssetLibrary {
 		return content;
 	}
 
-	public override function list(type:String):Array<String> {
-		return[for(k=>e in nameMap) '$prefix$e'];
-	}
-
-	// Backwards compat
-
-	// what the fuck does this do? beats me. -ItsLJcool
-
-	@:noCompletion public var zipPath(get, set):String;
-	@:noCompletion private inline function get_zipPath():String { return basePath; }
-	@:noCompletion private inline function set_zipPath(value:String):String { return basePath = value; }
+	public override function list(type:String):Array<String> { return [for(k=>e in nameMap) '$prefix$e']; }
 }
 #end

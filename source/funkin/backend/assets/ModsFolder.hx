@@ -118,7 +118,9 @@ class ModsFolder {
 			#if TRANSLATIONS_SUPPORT
 			if(skipTranslated && (l is TranslatedAssetLibrary)) continue;
 			#end
-			if (l is ScriptedAssetLibrary || l is IModsAssetLibrary) libs.push(cast(l, IModsAssetLibrary));
+			// No need to check for it being a `ScriptedAssetLibrary`, if `ScriptedAssetLibrary` extends ModsFolderLibrary, which implements `IModsAssetLibrary`
+			// If you have to revert this change then uhhhhh wasn't me, trust 🙏
+			if (/*l is ScriptedAssetLibrary ||*/ l is IModsAssetLibrary) libs.push(cast(l, IModsAssetLibrary));
 		}
 		return libs;
 	}

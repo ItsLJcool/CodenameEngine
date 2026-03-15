@@ -153,14 +153,14 @@ class MainState extends FlxState {
 		if (Framerate.isLoaded)
 			Framerate.instance.reload();
 
+		#if sys
+		CoolUtil.safeAddAttributes('./.temp/', NativeAPI.FileAttribute.HIDDEN);
+		#end
+
 		for (lib in ModsFolder.getLoadedModsLibs()) {
 			if (!(lib is ZipFolderLibrary)) continue;
 			if (cast(lib, ZipFolderLibrary).PRELOAD_VIDEOS) cast(lib, ZipFolderLibrary).precacheVideos();
 		}
-
-		#if sys
-		CoolUtil.safeAddAttributes('./.temp/', NativeAPI.FileAttribute.HIDDEN);
-		#end
 
 		var startState:Class<FlxState> = Flags.DISABLE_WARNING_SCREEN ? TitleState : funkin.menus.WarningState;
 
